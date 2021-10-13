@@ -1,0 +1,209 @@
+/* ========================================
+UNIVERSIDAD DISTRITAL FRANCISCO JOSE DE CALDAS
+Codigo de comunicacion SPI Modificado
+Autores:
+ David Alexander Saldarriaga Horta
+ Cristian David Pinzón Malaver
+
+nota: para habilitar las demas comunicaciones de la tarjeta descomentariar las secciones
+necesarias y agregar los modulos en el TopDesing
+ * ========================================
+*/
+#include "project.h"
+
+int32 RxBuffer[5],TxBuffer[5];
+int32 valor0,valor1,valor2,valor3,valor4,valor5;
+int32 valor6,valor7;
+
+int RxData,TxData,F1=0,i=0;
+uint16 ana[4];
+#define ADR_PSOC 43690
+
+CY_ISR(Rx)
+{
+RxData=SPIS_1_ReadRxData();
+    if (F1==1)
+    {
+    RxBuffer[i]=RxData;
+    SPIS_1_WriteTxData(TxBuffer[i]);
+    i++;
+        if (i==5)
+        {
+            i=0;
+            F1=0;
+        }
+    }else {SPIS_1_WriteTxData(15000);}
+    
+    if(RxData==ADR_PSOC)
+        {
+        F1=1;
+        }
+    else
+        {
+        F1=F1;
+        }
+}
+
+int main(void)
+{
+    CyGlobalIntEnable; /* Enable global interrupts. */
+    PWM_Servo_Start();
+    Clock_1_Start();
+    int Ctl_Servo=500;
+    
+    isr_1_StartEx(Rx);
+    RxBuffer[4]=0;
+ 
+
+    ADC_Start();
+    ADC_StartConvert();
+    VDAC0_Start();
+    VDAC1_Start();
+    VDAC2_Start();
+    PGA_1_Start();
+    PGA_2_Start();
+    PGA_3_Start();
+    SPIS_1_Start();
+        
+    
+    
+    for(;;)
+    {
+        ana[0]=ADC_GetResult16(0);  
+        ana[1]=ADC_GetResult16(1); 
+        /*AMux_FastSelect(0);
+        ADC_StartConvert();
+        ADC_IsEndConversion(ADC_WAIT_FOR_RESULT);
+        ana[0]=ADC_GetResult32();
+        ADC_StopConvert();
+        if (ana[0]<=0){
+            ana[0]=0;
+        }
+        if (ana[0]>=65535){
+            ana[0]=65535;
+        }*/
+        
+        /*AMux_FastSelect(1);
+        ADC_StartConvert();
+        ADC_IsEndConversion(ADC_WAIT_FOR_RESULT);
+        ana[1]=ADC_GetResult32();
+        ADC_StopConvert();
+        if (ana[1]<=0){ana[1]=0;}
+        if (ana[1]>=65535){ana[1]=65535;}
+        */
+        
+        /*Envío de datos*/
+        
+        TxBuffer[0]=ana[0];
+        TxBuffer[1]=200;
+        TxBuffer[2]=400;
+        TxBuffer[3]=ana[1];
+        TxBuffer[4]=valor0+valor1+valor2+valor3+valor4+valor5+
+                    valor6+valor7;
+        
+        if(IN0_Read()==0){
+          
+            valor0=1;
+            
+        }else{
+            
+            valor0=0; 
+            
+        }
+        
+        if(IN1_Read()==0){
+            
+            valor1=2;
+            
+        }else{
+            
+            valor1=0; 
+            
+        }
+        
+        if(IN2_Read()==0){
+            
+            valor2=4;
+            
+        }else{
+            
+            valor2=0; 
+            
+        }
+        
+        if(IN3_Read()==0){
+            
+            valor3=8;
+            
+        }else{
+            
+            valor3=0; 
+            
+        }
+        
+        if(IN4_Read()==0){
+            
+            valor4=16;
+            
+        }else{
+            
+            valor4=0; 
+            
+        }
+        
+        if(IN5_Read()==0){
+            
+            valor5=32;
+            
+        }else{
+            
+            valor5=0; 
+            
+        }
+        
+        if(IN6_Read()==0){
+            
+            valor6=64;
+            
+        }else{
+            
+            valor6=0; 
+            
+        }
+        
+        if(IN7_Read()==0){
+            
+            valor7=128;
+            
+        }else{
+            
+            valor7=0; 
+            
+        }
+        
+        /*Recepción de datos*/
+        //VDAC0_SetValue(RxBuffer[0]);
+        VDAC2_SetValue(RxBuffer[0]);
+        //VDAC1_SetValue(RxBuffer[1]);
+        Ctl_Servo=RxBuffer[3];
+        if (Ctl_Servo >= 1701) {
+            Ctl_Servo=1700;
+        }
+        if (Ctl_Servo <= 1300){
+            Ctl_Servo=1700;
+        }
+        
+        PWM_Servo_WriteCompare(Ctl_Servo);
+        DO0_Write((RxBuffer[4]>>0)&1);
+        DO1_Write((RxBuffer[4]>>1)&1);
+        DO2_Write((RxBuffer[4]>>2)&1);
+        DO3_Write((RxBuffer[4]>>3)&1);
+        DO4_Write((RxBuffer[4]>>4)&1);
+        DO5_Write((RxBuffer[4]>>5)&1);
+        DO6_Write((RxBuffer[4]>>6)&1);
+        DO7_Write((RxBuffer[4]>>7)&1);
+        
+    }
+}
+
+/* [] END OF FILE */
