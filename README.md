@@ -7,4 +7,4 @@ El documento Manual maquina conteo.docx esta compuesto por la recopilación de l
 
 Cualquier inquietud más formal contactenos:
 cdpinzonm@correo.udistrital.edu.co
-dasaldarriagah@correo.udistrital.e
+dasaldarriagah@correo.udistrital.edu.co
